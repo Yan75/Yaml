@@ -1,0 +1,207 @@
+---
+port: 7890
+socks-port: 7891
+redir-port: 7892
+mixed-port: 7893
+tproxy-port: 7895
+ipv6: true
+mode: rule
+log-level: silent
+allow-lan: true
+external-controller: 0.0.0.0:9090
+secret: reyre
+bind-address: "*"
+unified-delay: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: fake-ip
+  listen: 0.0.0.0:7874
+  nameserver:
+  - 1.1.1.1
+  - 1.0.0.1
+  - 8.8.8.8
+  - 8.8.4.4
+  - https://dns.adguard.com/dns-query
+  - https://dns.google/dns-query
+  - tls://dns.adguard.com
+  - tls://dns.google
+  fallback:
+  - 1.0.0.1
+  - https://cloudflare-dns.com/dns-query
+  - https://dns.google/dns-query
+  default-nameserver:
+  - 1.1.1.1
+  - 8.8.8.8
+  - 1.0.0.1
+  - 8.8.4.4
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+  - "*.lan"
+  - time.windows.com
+  - time.nist.gov
+  - time.apple.com
+  - time.asia.apple.com
+  - "*.ntp.org.cn"
+  - "*.openwrt.pool.ntp.org"
+  - time1.cloud.tencent.com
+  - time.ustc.edu.cn
+  - pool.ntp.org
+  - ntp.ubuntu.com
+  - ntp.aliyun.com
+  - ntp1.aliyun.com
+  - ntp2.aliyun.com
+  - ntp3.aliyun.com
+  - ntp4.aliyun.com
+  - ntp5.aliyun.com
+  - ntp6.aliyun.com
+  - ntp7.aliyun.com
+  - time1.aliyun.com
+  - time2.aliyun.com
+  - time3.aliyun.com
+  - time4.aliyun.com
+  - time5.aliyun.com
+  - time6.aliyun.com
+  - time7.aliyun.com
+  - "*.time.edu.cn"
+  - time1.apple.com
+  - time2.apple.com
+  - time3.apple.com
+  - time4.apple.com
+  - time5.apple.com
+  - time6.apple.com
+  - time7.apple.com
+  - time1.google.com
+  - time2.google.com
+  - time3.google.com
+  - time4.google.com
+  - time.*.com
+  - time.*.gov
+  - time.*.edu.cn
+  - time.*.apple.com
+  - time1.*.com
+  - time2.*.com
+  - time3.*.com
+  - time4.*.com
+  - time5.*.com
+  - time6.*.com
+  - time7.*.com
+  - ntp.*.com
+  - ntp1.*.com
+  - ntp2.*.com
+  - ntp3.*.com
+  - ntp4.*.com
+  - ntp5.*.com
+  - ntp6.*.com
+  - ntp7.*.com
+  - "+.pool.ntp.org"
+  - "+.msftconnecttest.com"
+  - "+.msftncsi.com"
+  - msftconnecttest.com
+  - msftncsi.com
+rule-providers:
+  oisd_big:
+    type: http
+    behavior: classical
+    path: "./rule_provider/oisd_big.yaml"
+    url: https://raw.githubusercontent.com/hillz2/openclash_adblock/main/oisd_big.yaml
+    interval: 28800
+proxies:
+  - name: JP
+    server: quiz.int.vidio.com
+    port: 443
+    type: trojan
+    password: 4b608598-4f59-443d-bb8f-b613f76c06b5
+    skip-cert-verify: true
+    sni: xjp.josvpn.me
+    network: ws
+    ws-opts:
+      path: /trojan
+      headers:
+        Host: xjp.josvpn.me
+    udp: true
+
+  - name: HK
+    server: quiz.staging.vidio.com
+    port: 443
+    type: trojan
+    password: fa65b7c3-5a7d-4055-8b04-268fbda546bd
+    skip-cert-verify: true
+    sni: hk1.trojanvpn.de
+    network: ws
+    ws-opts:
+      path: /
+      headers:
+        Host: hk1.trojanvpn.de
+    udp: true
+
+  - name: PIKA SG
+    server: quiz.vidio.com
+    port: 443
+    type: trojan
+    password: 2ff8e18b-30f5-4122-9e29-5725ead69cd3
+    skip-cert-verify: true
+    sni: pikachu.my.id
+    network: ws
+    ws-opts:
+      path: /trojan
+      headers:
+        Host: pikachu.my.id
+    udp: true
+
+proxy-groups:
+  - name: Server
+    type: select
+    proxies:
+      - HK
+      - JP
+      - PIKA SG
+      - LOAD-BALANCE 1
+      - LOAD-BALANCE 2
+      - FALLBACK
+      - PING
+      - DIRECT
+  - name: LOAD-BALANCE 1
+    type: load-balance
+    strategy: consistent-hashing
+    url: https://www.google.com/
+    interval: 1
+    proxies:
+      - HK
+      - JP
+      - PIKA SG
+      
+  - name: LOAD-BALANCE 2
+    type: load-balance
+    strategy: round-robin
+    url: https://www.google.com/
+    interval: 1
+    proxies:
+      - HK
+      - JP
+      - PIKA SG
+      
+  - name: PING
+    type: url-test
+    proxies:
+      - HK
+      - JP
+      - PIKA SG
+    url: https://www.google.com/
+    interval: 1
+    
+  - name: FALLBACK
+    type: fallback
+    url: https://www.google.com/
+    interval: 1
+    proxies:
+      - JP
+      - HK
+      - PIKA SG
+      
+rules:
+  - RULE-SET,oisd_big,REJECT
+  - MATCH,Server
