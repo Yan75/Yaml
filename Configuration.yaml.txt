@@ -114,7 +114,7 @@ proxies:
     server: quiz.int.vidio.com
     port: 443
     type: trojan
-    password: 4b608598-4f59-443d-bb8f-b613f76c06b5
+    password: d1e998e4-9963-4a84-8992-5ad14361b962
     skip-cert-verify: true
     sni: xjp.josvpn.me
     network: ws
